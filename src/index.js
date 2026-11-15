@@ -9,7 +9,7 @@ async function getImageVariantUrl(db, id, variant) {
     .get();
 }
 
-app.get("/:imageId{.webp}", async (c) => {
+app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
   const imageId = c.req.param("imageId");
   const variant = c.req.query("q")?.trim() ?? "hd";
 
@@ -18,7 +18,7 @@ app.get("/:imageId{.webp}", async (c) => {
   const ifNoneMatch = c.req.header("If-None-Match");
   const range = c.req.header("Range");
   
-  const imageVariantUrl = await getImageVariantUrl(c.env.DB, imageId, variant);
+  const imageVariantUrl = await getImageVariantUrl(c.env.DB, imageId.replace(/\.webp$/, ""), variant);
 
   const image = await fetch(imageVariantUrl || c.env.IMG_FALLBACK_URL, {
     headers: {
