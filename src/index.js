@@ -17,8 +17,12 @@ app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
 
   const ifNoneMatch = c.req.header("If-None-Match");
   const range = c.req.header("Range");
-  
-  const imageVariantUrl = await getImageVariantUrl(c.env.DB, imageId.replace(/\.webp$/, ""), variant);
+
+  const imageVariantUrl = await getImageVariantUrl(
+    c.env.DB,
+    imageId.replace(/\.webp$/, ""),
+    variant,
+  );
 
   const image = await fetch(imageVariantUrl || c.env.IMG_FALLBACK_URL, {
     headers: {
@@ -32,9 +36,19 @@ app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
   });
 
   const res = new Response(image.body, image);
-  res.headers.set("Cache-Control", "public, max-age=60, s-maxage=120, stale-while-revalidate=60");
+  res.headers.set(
+    "Cache-Control",
+    "public, max-age=60, s-maxage=120, stale-while-revalidate=60",
+  );
 
   return res;
+});
+
+app.onError((err, c) => {
+  if ("message" in error) {
+    return c.text(err.message, 500);
+  }
+  return c.text("Internal server error", 500);
 });
 
 export default app;
