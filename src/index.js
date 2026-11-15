@@ -24,7 +24,7 @@ app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
     variant,
   );
 
-  const image = await fetch(imageVariantUrl[variant] || c.env.IMG_FALLBACK_URL, {
+  const image = await fetch(imageVariantUrl?.[variant] || c.env.IMG_FALLBACK_URL, {
     headers: {
       ...(range && { Range: range }),
       ...(ifNoneMatch && { "If-None-Match": ifNoneMatch }),
@@ -45,7 +45,7 @@ app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
 });
 
 app.onError((err, c) => {
-  if ("message" in error) {
+  if ("message" in err) {
     return c.text(err.message, 500);
   }
   return c.text("Internal server error", 500);
