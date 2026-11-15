@@ -1,0 +1,13 @@
+{
+  "name": "@dadrakoran/image-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "hono": "^4.13.17",
+    "mv": "mv dist/index.js dist/_worker.js",
+    "fake-deploy": "wrangler deploy --dry-run --outdir=dist && npm run mv"
+  },
+  "devDependencies": {
+    "wrangler": "^3.114.17"
+  }
+}
