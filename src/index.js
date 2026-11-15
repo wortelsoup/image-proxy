@@ -9,6 +9,34 @@ async function getImageVariantUrl(db, id, variant) {
     .first();
 }
 
+async function getImageProxy(urlOrigin, { ifNoneMatch, range } = {}) {
+  const image = await fetch(urlOrigin, {
+    headers: {
+      ...(range && { Range: range }),
+      ...(ifNoneMatch && { "If-None-Match": ifNoneMatch }),
+    },
+    cf: {
+      cacheEverything: true,
+      cacheTtlByStatus: { "200-299": 2592000, 404: 10, "500-599": 0 },
+    },
+  });
+
+  const res = new Response(image.body, image);
+  res.headers.set(
+    "Cache-Control",
+    "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800",
+  );
+  res.headers.append("Vary", "Accept");
+
+  return res;
+}
+
+app.get("/image-not-available-yet.webp", async (c) => {
+  const ifNoneMatch = c.req.header("If-None-Match");
+  const range = c.req.header("Range");
+  return await getImageProxy(c.env.IMG_FALLBACK_URL, { ifNoneMatch, range });
+});
+
 app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
   const imageId = c.req.param("imageId");
   const variant = c.req.query("q")?.trim() ?? "hd";
@@ -24,24 +52,11 @@ app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
     variant,
   );
 
-  const image = await fetch(imageVariantUrl?.[variant] || c.env.IMG_FALLBACK_URL, {
-    headers: {
-      ...(range && { Range: range }),
-      ...(ifNoneMatch && { "If-None-Match": ifNoneMatch }),
-    },
-    cf: {
-      cacheEverything: true,
-      cacheTtlByStatus: { "200-299": 120, 404: 1, "500-599": 0 },
-    },
-  });
+  if (!imageVariantUrl) {
+    return c.redirect("/image-not-available-yet.webp");
+  }
 
-  const res = new Response(image.body, image);
-  res.headers.set(
-    "Cache-Control",
-    "public, max-age=60, s-maxage=120, stale-while-revalidate=60",
-  );
-
-  return res;
+  return await getImageProxy(imageVariantUrl[variant], { ifNoneMatch, range });
 });
 
 app.onError((err, c) => {
