@@ -1,5 +1,9 @@
 import { Hono } from "hono";
 
+const MAX_SERVER_CACHE = 60 * 60 * 24 * 30; // valid for 30 days
+const MAX_STALE_CACHE = 60 * 60 * 24 * 7; // plus 7 days before expired
+const MAX_BROWSER_CACHE = 60 * 60 * 24; // browser can cache for 24 hours
+
 const app = new Hono();
 
 async function getImageVariantUrl(db, id, variant) {
@@ -17,15 +21,12 @@ async function getImageProxy(urlOrigin, { ifNoneMatch, range } = {}) {
     },
     cf: {
       cacheEverything: true,
-      cacheTtlByStatus: { "200-299": 2592000, 404: 10, "500-599": 0 },
+      cacheTtlByStatus: { "200-299": MAX_SERVER_CACHE, 404: 10, "500-599": 0 },
     },
   });
 
   const res = new Response(image.body, image);
-  res.headers.set(
-    "Cache-Control",
-    "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800",
-  );
+  res.headers.set("Cache-Control", `public, max-age=${MAX_BROWSER_CACHE}, s-maxage=${MAX_SERVER_CACHE}, stale-while-revalidate=${MAX_STALE_CACHE}`);
   res.headers.append("Vary", "Accept");
 
   return res;
