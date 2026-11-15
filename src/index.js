@@ -6,7 +6,7 @@ async function getImageVariantUrl(db, id, variant) {
   return db
     .prepare(`SELECT image_sources.${variant} FROM image_sources WHERE id = ?`)
     .bind(id)
-    .get();
+    .first();
 }
 
 app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
@@ -24,7 +24,7 @@ app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
     variant,
   );
 
-  const image = await fetch(imageVariantUrl || c.env.IMG_FALLBACK_URL, {
+  const image = await fetch(imageVariantUrl[variant] || c.env.IMG_FALLBACK_URL, {
     headers: {
       ...(range && { Range: range }),
       ...(ifNoneMatch && { "If-None-Match": ifNoneMatch }),
@@ -45,7 +45,10 @@ app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
 });
 
 app.onError((err, c) => {
-  return c.text(err.stack, 500);
+  if ("message" in error) {
+    return c.text(err.message, 500);
+  }
+  return c.text("Internal server error", 500);
 });
 
 export default app;
