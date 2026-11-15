@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "mv": "mv dist/index.js dist/_worker.js",
-    "fake-deploy": "wrangler deploy src/index.js --outdir=dist --name=image-proxy --dry-run && npm run mv"
+    "fake-deploy": "wrangler deploy src/index.js --outdir=dist --name=image-proxy --compatibility-date=$(date +%Y-%m-%d) --dry-run && npm run mv"
   },
   "dependencies": {
     "hono": "^4.13.17"
