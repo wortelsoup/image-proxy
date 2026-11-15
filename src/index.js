@@ -45,10 +45,7 @@ app.get("/:imageId{[0-9a-fA-F-]+\\.webp}", async (c) => {
 });
 
 app.onError((err, c) => {
-  if ("message" in error) {
-    return c.text(err.message, 500);
-  }
-  return c.text("Internal server error", 500);
+  return c.text(err.stack, 500);
 });
 
 export default app;
