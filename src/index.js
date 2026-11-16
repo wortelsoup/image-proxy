@@ -28,7 +28,7 @@ async function getImageProxy(urlOrigin, { ifNoneMatch, range } = {}) {
   const res = new Response(image.body, image);
   res.headers.set("Cache-Control",`public, max-age=${MAX_BROWSER_CACHE}, s-maxage=${MAX_SERVER_CACHE}, stale-while-revalidate=${MAX_STALE_CACHE}`);
   res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-  res.headers.set("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
   res.headers.append("Vary", "Accept");
   res.headers.delete("Via");
   res.headers.delete("Set-Cookie");
